@@ -1,12 +1,21 @@
 package com.example.photosearch;
 
 public class Model {
+    private Integer id;
     private String title;
-    private byte[] img;
+    private String img;
 
-    public Model(String title, byte[] img) {
+    public Model(Integer id, String title, String img) {
+        this.id = id;
         this.title = title;
         this.img = img;
+    }
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getTitle() {
@@ -17,11 +26,11 @@ public class Model {
         this.title = title;
     }
 
-    public byte[] getImg() {
+    public String getImg() {
         return img;
     }
 
-    public void setImg(byte[] img) {
+    public void setImg(String img) {
         this.img = img;
     }
 }
