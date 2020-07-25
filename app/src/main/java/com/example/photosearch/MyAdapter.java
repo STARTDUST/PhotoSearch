@@ -1,9 +1,15 @@
 package com.example.photosearch;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
+import android.util.LruCache;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +50,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyHolder> implements Filtera
         try {
             File f=new File(image);
             Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
-            holder.model_iv.setImageBitmap(b);
+            holder.model_iv.setImageBitmap(getResizedBitmap(b));
         }
         catch (FileNotFoundException e)
         {
@@ -60,18 +66,14 @@ public class MyAdapter extends RecyclerView.Adapter<MyHolder> implements Filtera
                 Integer id = models.get(pos).getId();
                 String name = models.get(pos).getTitle();
                 String image = models.get(pos).getImg();
-//                BitmapDrawable bitmapDrawable = (BitmapDrawable) holder.model_iv.getDrawable();
-//
-//                Bitmap bitmap1 = bitmapDrawable.getBitmap();
-//                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//                bitmap1.compress(Bitmap.CompressFormat.PNG, 100, stream);
-//                byte[] bytes = stream.toByteArray();
 
                 Intent intent = new Intent(context, DetailActivity.class);
                 intent.putExtra("Id", id);
                 intent.putExtra("iName", name);
                 intent.putExtra("iImage", image);
+
                 context.startActivity(intent);
+                Log.wtf("adapter","name=" + name);
             }
         });
     }
@@ -89,4 +91,21 @@ public class MyAdapter extends RecyclerView.Adapter<MyHolder> implements Filtera
 
         return filter;
     }
+
+    private Bitmap getResizedBitmap(Bitmap image) {
+        int maxSize = 854;
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        float bitmapRatio = (float)width / (float) height;
+        if (bitmapRatio > 0) {
+            width = maxSize;
+            height = (int) (width / bitmapRatio);
+        } else {
+            height = maxSize;
+            width = (int) (height * bitmapRatio);
+        }
+        return Bitmap.createScaledBitmap(image, width, height, true);
+    }
+
 }

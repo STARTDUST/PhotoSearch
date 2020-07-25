@@ -19,7 +19,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
+import android.util.LruCache;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -45,6 +47,7 @@ public class Add extends AppCompatActivity {
     ImageView iv_add;
     TextInputEditText et_add;
     MaterialButton btn_add;
+    Bitmap bitmap;
 
     public  static SQLiteHelper sqLiteHelper;
 
@@ -55,8 +58,6 @@ public class Add extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
-
-
 
         iv_add = findViewById(R.id.iv_add);
         et_add = findViewById(R.id.et_add);
@@ -89,7 +90,6 @@ public class Add extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //saving in Internal Storage
-                Bitmap bitmap = ((BitmapDrawable)iv_add.getDrawable()).getBitmap();
                 File dir = getApplicationContext().getDir("Images",MODE_PRIVATE);
                 File file = new File(dir, et_add.getText().toString().trim()+".jpg");
                 Log.wtf("add", file.getAbsolutePath());
@@ -110,7 +110,6 @@ public class Add extends AppCompatActivity {
                     sqLiteHelper.insertData(et_add.getText().toString().trim(), file.getAbsolutePath());
                     Toast.makeText(Add.this, "Added Sucs", Toast.LENGTH_LONG).show();
                     et_add.setText("");
-                    iv_add.setImageResource(R.mipmap.ic_launcher);
 
                     Intent intent = new Intent(Add.this, MainActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -145,7 +144,15 @@ public class Add extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == IMAGE_PICK_COD) {
-            iv_add.setImageURI(data.getData());
+//            iv_add.setImageURI(data.getData());
+            Uri imageUri = data.getData();
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                iv_add.setImageBitmap(getResizedBitmap(bitmap));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
@@ -165,7 +172,26 @@ public class Add extends AppCompatActivity {
             }
         }
     }
+
+    private Bitmap getResizedBitmap(Bitmap image) {
+        int maxSize = 1920;
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        float bitmapRatio = (float)width / (float) height;
+        if (bitmapRatio > 0) {
+            width = maxSize;
+            height = (int) (width / bitmapRatio);
+        } else {
+            height = maxSize;
+            width = (int) (height * bitmapRatio);
+        }
+        return Bitmap.createScaledBitmap(image, width, height, true);
+    }
 }
+
+
+
 
 
 //        data/user/0/com.example.photosearch/app_Images/UniqueFileName.jpg

@@ -45,10 +45,15 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
         mName = intent.getStringExtra("iName");
         mImage = intent.getStringExtra("iImage");
         id = intent.getIntExtra("Id", 0);
+
+        Log.wtf("det","name=" + mName);
+
         actionBar.setTitle(mName);
 
+//        iv_det.setImageBitmap(getResizedBitmap(mImage));
+//
         loadImageFromStorage(mImage, mName);
-
+//
 //        Bitmap bitmap = BitmapFactory.decodeByteArray(mBytes, 0, mBytes.length);
 //        iv_det.setImageBitmap(bitmap);
     }
@@ -59,7 +64,7 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
         try {
             File f=new File(path);
             Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
-            iv_det.setImageBitmap(b);
+            iv_det.setImageBitmap(getResizedBitmap(b));
         }
         catch (FileNotFoundException e)
         {
@@ -99,13 +104,29 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
     }
 
     public void openDialog(){
-        Log.wtf("image1", mImage);
-        Dialog dialog = new Dialog(id, mImage, mName);
+        Log.wtf("image1", mImage.toString());
+        Dialog dialog = new Dialog(id, mImage.toString(), mName);
         dialog.show(getSupportFragmentManager(), "dialog");
     }
 
     @Override
     public void applyText(String name) {
         actionBar.setTitle(name);
+    }
+
+    private Bitmap getResizedBitmap(Bitmap image) {
+        int maxSize = 1920;
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        float bitmapRatio = (float)width / (float) height;
+        if (bitmapRatio > 0) {
+            width = maxSize;
+            height = (int) (width / bitmapRatio);
+        } else {
+            height = maxSize;
+            width = (int) (height * bitmapRatio);
+        }
+        return Bitmap.createScaledBitmap(image, width, height, true);
     }
 }

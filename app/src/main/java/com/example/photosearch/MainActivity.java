@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -30,28 +31,27 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
-        sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
+//        sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
+//        sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
 
         rv = findViewById(R.id.rv);
         list = new ArrayList<>();
-//        rv.setLayoutManager(new LinearLayoutManager(this));
         rv.setLayoutManager(new GridLayoutManager(this, 4));
 
-        myAdapter = new MyAdapter(this, list);
-        rv.setAdapter(myAdapter);
-
-        Cursor cursor = sqLiteHelper.getData("SELECT * FROM FOOD");
-        list.clear();
-        while (cursor.moveToNext()){
-            int id = cursor.getInt(0);
-            String name = cursor.getString(1);
-            String image = cursor.getString(2);
-
-            list.add(new Model(id ,name, image));
-        }
-
-        myAdapter.notifyDataSetChanged();
+//        myAdapter = new MyAdapter(this, list);
+//        rv.setAdapter(myAdapter);
+//
+//        Cursor cursor = sqLiteHelper.getData("SELECT * FROM FOOD");
+//        list.clear();
+//        while (cursor.moveToNext()){
+//            int id = cursor.getInt(0);
+//            String name = cursor.getString(1);
+//            String image = cursor.getString(2);
+//
+//            list.add(new Model(id ,name, image));
+//        }
+//
+//        myAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -90,5 +90,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
+        sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
+
+        myAdapter = new MyAdapter(this, list);
+        rv.setAdapter(myAdapter);
+
+        Cursor cursor = sqLiteHelper.getData("SELECT * FROM FOOD");
+        list.clear();
+        while (cursor.moveToNext()){
+            int id = cursor.getInt(0);
+            String name = cursor.getString(1);
+            String image = cursor.getString(2);
+
+            list.add(new Model(id ,name, image));
+        }
+
+        myAdapter.notifyDataSetChanged();
+
+        Log.wtf("onResume", "mtav");
     }
 }
