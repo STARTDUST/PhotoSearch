@@ -11,6 +11,7 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -40,8 +41,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Add extends AppCompatActivity {
     ImageView iv_add;
@@ -50,9 +55,13 @@ public class Add extends AppCompatActivity {
     Bitmap bitmap;
 
     public  static SQLiteHelper sqLiteHelper;
+    List<String> list;
+    boolean name_repeat = false;
 
     private static final int IMAGE_PICK_COD = 1000;
     private static final int PERMISSION_COD = 1000;
+
+    final static Pattern PATTERN = Pattern.compile("(.*?)(?:\\((\\d+)\\))?(\\.[^.]*)?");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +74,7 @@ public class Add extends AppCompatActivity {
 
         sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
         sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
+        list = new ArrayList<>();
 
         iv_add.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,36 +99,75 @@ public class Add extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(View v) {
-                //saving in Internal Storage
-                File dir = getApplicationContext().getDir("Images",MODE_PRIVATE);
-                File file = new File(dir, et_add.getText().toString().trim()+".jpg");
-                Log.wtf("add", file.getAbsolutePath());
-                Toast.makeText(Add.this, file.getAbsolutePath(), Toast.LENGTH_LONG).show();
-                try{
-                    OutputStream stream = null;
-                    stream = new FileOutputStream(file);
-                    bitmap.compress(Bitmap.CompressFormat.JPEG,100,stream);
-                    stream.flush();
-                    stream.close();
-                }catch (IOException e)
-                {
-                    e.printStackTrace();
+
+                //name not repeats
+                if (!fileExists(et_add.getText().toString())){
+//                  saving in Internal Storage
+                    File dir = getApplicationContext().getDir("Images",MODE_PRIVATE);
+                    File file = new File(dir, et_add.getText().toString().trim()+".jpg");
+                    Log.wtf("add", file.getAbsolutePath());
+                    Toast.makeText(Add.this, file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                    try{
+                        OutputStream stream = null;
+                        stream = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG,100,stream);
+                        stream.flush();
+                        stream.close();
+                    }catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+
+                    //saving in SQLite
+                    try {
+                        sqLiteHelper.insertData(et_add.getText().toString().trim(), file.getAbsolutePath());
+                        Toast.makeText(Add.this, "Added Sucs", Toast.LENGTH_LONG).show();
+                        et_add.setText("");
+
+                        Intent intent = new Intent(Add.this, MainActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                    }
+
+                    catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
 
-                //saving in SQLite
-                try {
-                    sqLiteHelper.insertData(et_add.getText().toString().trim(), file.getAbsolutePath());
-                    Toast.makeText(Add.this, "Added Sucs", Toast.LENGTH_LONG).show();
-                    et_add.setText("");
+                //name repeats
+                else {
+                    //saving in Internal Storage
+                    File dir = getApplicationContext().getDir("Images",MODE_PRIVATE);
+                    File file = new File(dir, getNewName(et_add.getText().toString()).trim()+".jpg");
+                    Log.wtf("add", file.getAbsolutePath());
+                    Toast.makeText(Add.this, file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                    try{
+                        OutputStream stream = null;
+                        stream = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG,100,stream);
+                        stream.flush();
+                        stream.close();
+                    }catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
 
-                    Intent intent = new Intent(Add.this, MainActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
+                    //saving in SQLite
+                    try {
+                        sqLiteHelper.insertData(getNewName(et_add.getText().toString()).trim(), file.getAbsolutePath());
+                        Toast.makeText(Add.this, "Added Sucs", Toast.LENGTH_LONG).show();
+                        et_add.setText("");
+
+                        Intent intent = new Intent(Add.this, MainActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                    }
+
+                    catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
 
-                catch (Exception e){
-                    e.printStackTrace();
-                }
             }
         });
     }
@@ -188,10 +237,50 @@ public class Add extends AppCompatActivity {
         }
         return Bitmap.createScaledBitmap(image, width, height, true);
     }
+
+
+    String getNewName(String filename) {
+        if (fileExists(filename)) {
+            Matcher m = PATTERN.matcher(filename);
+            if (m.matches()) {
+                String prefix = m.group(1);
+                String last = m.group(2);
+                String suffix = m.group(3);
+                if (suffix == null) suffix = "";
+
+                int count = last != null ? Integer.parseInt(last) : 0;
+
+                do {
+                    count++;
+                    filename = prefix + "(" + count + ")" + suffix;
+                } while (fileExists(filename));
+            }
+        }
+        return filename;
+    }
+
+    private boolean fileExists(String filename) {
+        name_repeat = false;
+
+        Cursor cursor = sqLiteHelper.getData("SELECT * FROM FOOD");
+        list.clear();
+        while (cursor.moveToNext()){
+            int id = cursor.getInt(0);
+            String name = cursor.getString(1);
+            String image = cursor.getString(2);
+
+            list.add(name);
+        }
+
+        for (int i = 0; i <list.size() ; i++) {
+            if (filename.equals(list.get(i))){
+                name_repeat = true;
+            }
+        }
+
+        return name_repeat;
+    }
 }
-
-
-
 
 
 //        data/user/0/com.example.photosearch/app_Images/UniqueFileName.jpg

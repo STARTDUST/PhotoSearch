@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 //
 //            list.add(new Model(id ,name, image));
 //        }
-//
+
 //        myAdapter.notifyDataSetChanged();
     }
 
