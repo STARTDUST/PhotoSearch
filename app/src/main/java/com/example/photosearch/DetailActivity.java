@@ -2,8 +2,10 @@ package com.example.photosearch;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -85,12 +87,38 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
         switch (item.getItemId()){
             case R.id.item_delete:
             {
-                sqLiteHelper.deleteData(id.toString());
+                AlertDialog.Builder builder = new AlertDialog.Builder(DetailActivity.this);
 
-                Intent intent = new Intent(DetailActivity.this, MainActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+                builder.setMessage("Do you want to delete this photo??")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Log.wtf("dialog", "yes_pressed");
 
+                                sqLiteHelper.deleteData(id.toString());
+                                File file = new File(mImage);
+                                if(file.exists()){
+                                    boolean deleted = file.delete();
+                                    if (deleted){
+                                        Log.wtf("file", "deleted this file == " + mImage);
+                                    }
+                                    else {
+                                        Log.wtf("file", "not deleted");
+                                    }
+                                }
+                                else {
+                                    Log.wtf("file", "not exists");
+                                }
+
+                                Intent intent = new Intent(DetailActivity.this, MainActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                            }
+                        })
+                        .setNegativeButton("Cancel", null);
+
+                AlertDialog alert = builder.create();
+                alert.show();
                 break;
             }
 

@@ -17,6 +17,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,27 +32,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
-//        sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
+        sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
+        sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
 
         rv = findViewById(R.id.rv);
         list = new ArrayList<>();
         rv.setLayoutManager(new GridLayoutManager(this, 4));
-
-//        myAdapter = new MyAdapter(this, list);
-//        rv.setAdapter(myAdapter);
-//
-//        Cursor cursor = sqLiteHelper.getData("SELECT * FROM FOOD");
-//        list.clear();
-//        while (cursor.moveToNext()){
-//            int id = cursor.getInt(0);
-//            String name = cursor.getString(1);
-//            String image = cursor.getString(2);
-//
-//            list.add(new Model(id ,name, image));
-//        }
-
-//        myAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -96,12 +82,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
-        sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
-
-        myAdapter = new MyAdapter(this, list);
-        rv.setAdapter(myAdapter);
-
         Cursor cursor = sqLiteHelper.getData("SELECT * FROM FOOD");
         list.clear();
         while (cursor.moveToNext()){
@@ -111,6 +91,10 @@ public class MainActivity extends AppCompatActivity {
 
             list.add(new Model(id ,name, image));
         }
+        Collections.reverse(list);
+
+        myAdapter = new MyAdapter(this, list);
+        rv.setAdapter(myAdapter);
 
         myAdapter.notifyDataSetChanged();
 

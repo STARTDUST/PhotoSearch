@@ -40,7 +40,7 @@ public class Dialog extends AppCompatDialogFragment {
 
         et_dialog.setText(name);
 
-        builder.setView(view).setTitle("Edit").setNegativeButton("cancle", new DialogInterface.OnClickListener() {
+        builder.setView(view).setTitle("Edit").setNegativeButton("cancel", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
