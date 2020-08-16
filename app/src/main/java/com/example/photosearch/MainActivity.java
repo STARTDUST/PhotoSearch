@@ -3,9 +3,9 @@ package com.example.photosearch;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.MenuItemCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
@@ -16,10 +16,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import com.google.android.material.appbar.AppBarLayout;
+
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
+
+    AppBarLayout app_bar_main;
+    Toolbar toolbar_main;
 
     RecyclerView rv;
     MyAdapter myAdapter;
@@ -36,6 +41,11 @@ public class MainActivity extends AppCompatActivity {
         sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
 
         rv = findViewById(R.id.rv);
+        app_bar_main = (AppBarLayout) findViewById(R.id.app_bar_main);
+        toolbar_main = (Toolbar) findViewById(R.id.toolbar_main);
+
+        setSupportActionBar(toolbar_main);
+
         list = new ArrayList<>();
         rv.setLayoutManager(new GridLayoutManager(this, 4));
     }

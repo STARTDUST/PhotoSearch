@@ -6,26 +6,16 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.util.LruCache;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -35,16 +25,11 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -106,7 +91,6 @@ public class Add extends AppCompatActivity {
                     File dir = getApplicationContext().getDir("Images",MODE_PRIVATE);
                     File file = new File(dir, et_add.getText().toString().trim()+".jpg");
                     Log.wtf("add", file.getAbsolutePath());
-                    Toast.makeText(Add.this, file.getAbsolutePath(), Toast.LENGTH_LONG).show();
                     try{
                         OutputStream stream = null;
                         stream = new FileOutputStream(file);
@@ -140,7 +124,6 @@ public class Add extends AppCompatActivity {
                     File dir = getApplicationContext().getDir("Images",MODE_PRIVATE);
                     File file = new File(dir, getNewName(et_add.getText().toString()).trim()+".jpg");
                     Log.wtf("add", file.getAbsolutePath());
-                    Toast.makeText(Add.this, file.getAbsolutePath(), Toast.LENGTH_LONG).show();
                     try{
                         OutputStream stream = null;
                         stream = new FileOutputStream(file);
@@ -172,17 +155,6 @@ public class Add extends AppCompatActivity {
         });
     }
 
-    private byte[] imageViewToByte(ImageView image){
-        Bitmap bitmap = ((BitmapDrawable) image.getDrawable()).getBitmap();
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byte[] bytes = stream.toByteArray();
-
-        Log.wtf("image", bytes.toString());
-
-        return bytes;
-    }
-
     private void pickImageFromGallery(){
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
@@ -193,7 +165,6 @@ public class Add extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == IMAGE_PICK_COD) {
-//            iv_add.setImageURI(data.getData());
             Uri imageUri = data.getData();
             try {
                 bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);

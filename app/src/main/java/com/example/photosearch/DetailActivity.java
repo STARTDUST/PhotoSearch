@@ -1,6 +1,7 @@
 package com.example.photosearch;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,13 +10,27 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.TextView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.Constraints;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.OnApplyWindowInsetsListener;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.material.appbar.AppBarLayout;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,25 +38,60 @@ import java.io.FileNotFoundException;
 
 public class DetailActivity extends AppCompatActivity implements Dialog.DialogListener {
 
+    AppBarLayout app_bar_detail;
+    Toolbar toolbar_detail;
+    boolean app_bar_show = false;
+
     ImageView iv_det;
     Integer id;
     String mImage;
     String mName;
-    ActionBar actionBar;
 
     public static SQLiteHelper sqLiteHelper;
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
+        Window window = getWindow();
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorStatusBar));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Window w = getWindow(); // in Activity's onCreate() for instance
+            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        }
+
+        final View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
+
         sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
         sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
 
-        actionBar = getSupportActionBar();
 
         iv_det = findViewById(R.id.iv_det);
+        app_bar_detail = (AppBarLayout) findViewById(R.id.app_bar_detail);
+        toolbar_detail = (Toolbar) findViewById(R.id.toolbar_detail);
+
+        setSupportActionBar(toolbar_detail);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        app_bar_detail.setVisibility(View.GONE);
+
+
+        Log.wtf("statusss", String.valueOf(getStatusBarHeight()));
+
+        ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) app_bar_detail.getLayoutParams();
+        layoutParams.setMargins(0, getStatusBarHeight(), 0, 0);
 
         Intent intent = getIntent();
         mName = intent.getStringExtra("iName");
@@ -50,18 +100,39 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
 
         Log.wtf("det","name=" + mName);
 
-        actionBar.setTitle(mName);
-
-//        iv_det.setImageBitmap(getResizedBitmap(mImage));
-//
+        toolbar_detail.setTitle(mName);
         loadImageFromStorage(mImage, mName);
-//
-//        Bitmap bitmap = BitmapFactory.decodeByteArray(mBytes, 0, mBytes.length);
-//        iv_det.setImageBitmap(bitmap);
+
+        iv_det.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (app_bar_show){
+                    app_bar_detail.setVisibility(View.GONE);
+
+                    decorView.setSystemUiVisibility(
+                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                                    | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                                    | View.SYSTEM_UI_FLAG_IMMERSIVE);
+
+                    app_bar_show = false;
+                }
+                else {
+                    app_bar_detail.setVisibility(View.VISIBLE);
+
+                    decorView.setSystemUiVisibility(
+//                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                              View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+
+                    app_bar_show = true;
+                }
+            }
+        });
     }
 
-    private void loadImageFromStorage(String path, String name)
-    {
+    private void loadImageFromStorage(String path, String name) {
 
         try {
             File f=new File(path);
@@ -139,7 +210,7 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
 
     @Override
     public void applyText(String name) {
-        actionBar.setTitle(name);
+        toolbar_detail.setTitle(name);
     }
 
     private Bitmap getResizedBitmap(Bitmap image) {
@@ -156,5 +227,15 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
             width = (int) (height * bitmapRatio);
         }
         return Bitmap.createScaledBitmap(image, width, height, true);
+    }
+
+
+    public int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
     }
 }

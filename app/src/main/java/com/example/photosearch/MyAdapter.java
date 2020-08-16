@@ -1,15 +1,10 @@
 package com.example.photosearch;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
-import android.util.LruCache;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,6 +41,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyHolder> implements Filtera
     public void onBindViewHolder(@NonNull final MyHolder holder, int position) {
         holder.model_tv_title.setText(models.get(position).getTitle());
 
+
         String image = models.get(position).getImg();
         try {
             File f=new File(image);
@@ -56,9 +52,6 @@ public class MyAdapter extends RecyclerView.Adapter<MyHolder> implements Filtera
         {
             e.printStackTrace();
         }
-
-//        Animation animation = AnimationUtils.loadAnimation(context, android.R.anim.slide_in_left);
-//        holder.itemView.startAnimation(animation);
 
         holder.setItemClickListener(new ItemClickListener() {
             @Override
