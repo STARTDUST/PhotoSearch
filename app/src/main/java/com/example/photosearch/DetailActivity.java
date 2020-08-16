@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
@@ -29,12 +30,16 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.OnApplyWindowInsetsListener;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.appbar.AppBarLayout;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class DetailActivity extends AppCompatActivity implements Dialog.DialogListener {
 
@@ -42,10 +47,14 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
     Toolbar toolbar_detail;
     boolean app_bar_show = false;
 
-    ImageView iv_det;
+//    ImageView iv_det;
     Integer id;
     String mImage;
     String mName;
+    int position;
+
+    ViewPager pager;
+    ArrayList<Model> list;
 
     public static SQLiteHelper sqLiteHelper;
 
@@ -55,37 +64,39 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        Window window = getWindow();
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorStatusBar));
+//        Window window = getWindow();
+//        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+//        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+//        window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorStatusBar));
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Window w = getWindow(); // in Activity's onCreate() for instance
-            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//            Window w = getWindow(); // in Activity's onCreate() for instance
+//            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+//        }
 
         final View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
+//        decorView.setSystemUiVisibility(
+//                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+//                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+//                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
 
         sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
         sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
 
 
-        iv_det = findViewById(R.id.iv_det);
+//        iv_det = findViewById(R.id.iv_det);
         app_bar_detail = (AppBarLayout) findViewById(R.id.app_bar_detail);
         toolbar_detail = (Toolbar) findViewById(R.id.toolbar_detail);
+        pager = (ViewPager) findViewById(R.id.pager);
+        list = new ArrayList<>();
 
         setSupportActionBar(toolbar_detail);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        app_bar_detail.setVisibility(View.GONE);
+//        app_bar_detail.setVisibility(View.GONE);
 
 
         Log.wtf("statusss", String.valueOf(getStatusBarHeight()));
@@ -97,54 +108,88 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
         mName = intent.getStringExtra("iName");
         mImage = intent.getStringExtra("iImage");
         id = intent.getIntExtra("Id", 0);
+        position = intent.getIntExtra("position", 0);
 
         Log.wtf("det","name=" + mName);
 
         toolbar_detail.setTitle(mName);
-        loadImageFromStorage(mImage, mName);
+//        loadImageFromStorage(mImage, mName);
 
-        iv_det.setOnClickListener(new View.OnClickListener() {
+//        iv_det.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (app_bar_show){
+//                    app_bar_detail.setVisibility(View.GONE);
+//
+//                    decorView.setSystemUiVisibility(
+//                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//                                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+//                                    | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+//                                    | View.SYSTEM_UI_FLAG_IMMERSIVE);
+//
+//                    app_bar_show = false;
+//                }
+//                else {
+//                    app_bar_detail.setVisibility(View.VISIBLE);
+//
+//                    decorView.setSystemUiVisibility(
+////                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                              View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+//
+//                    app_bar_show = true;
+//                }
+//            }
+//        });
+
+        Cursor cursor = sqLiteHelper.getData("SELECT * FROM FOOD");
+        list.clear();
+        while (cursor.moveToNext()){
+            int id = cursor.getInt(0);
+            String name = cursor.getString(1);
+            String image = cursor.getString(2);
+
+            list.add(new Model(id, name, image));
+        }
+
+        Collections.reverse(list);
+
+        FullScreenAdapter fullScreenAdapter = new FullScreenAdapter(this, list, app_bar_detail, decorView);
+        pager.setAdapter(fullScreenAdapter);
+        pager.setCurrentItem(position, true);
+
+        pager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onClick(View v) {
-                if (app_bar_show){
-                    app_bar_detail.setVisibility(View.GONE);
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
-                    decorView.setSystemUiVisibility(
-                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                                    | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                                    | View.SYSTEM_UI_FLAG_IMMERSIVE);
+            }
 
-                    app_bar_show = false;
-                }
-                else {
-                    app_bar_detail.setVisibility(View.VISIBLE);
+            @Override
+            public void onPageSelected(int position) {
+                toolbar_detail.setTitle(list.get(position).getTitle());
+            }
 
-                    decorView.setSystemUiVisibility(
-//                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                              View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            @Override
+            public void onPageScrollStateChanged(int state) {
 
-                    app_bar_show = true;
-                }
             }
         });
     }
 
-    private void loadImageFromStorage(String path, String name) {
-
-        try {
-            File f=new File(path);
-            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
-            iv_det.setImageBitmap(getResizedBitmap(b));
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-
-    }
+//    private void loadImageFromStorage(String path, String name) {
+//
+//        try {
+//            File f=new File(path);
+//            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
+//            iv_det.setImageBitmap(getResizedBitmap(b));
+//        }
+//        catch (FileNotFoundException e)
+//        {
+//            e.printStackTrace();
+//        }
+//
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -204,7 +249,7 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
 
     public void openDialog(){
         Log.wtf("image1", mImage.toString());
-        Dialog dialog = new Dialog(id, mImage.toString(), mName);
+        Dialog dialog = new Dialog(id, mImage.toString(), mName, DetailActivity.this);
         dialog.show(getSupportFragmentManager(), "dialog");
     }
 

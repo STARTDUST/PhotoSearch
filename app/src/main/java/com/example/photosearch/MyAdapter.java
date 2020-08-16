@@ -64,6 +64,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyHolder> implements Filtera
                 intent.putExtra("Id", id);
                 intent.putExtra("iName", name);
                 intent.putExtra("iImage", image);
+                intent.putExtra("position", position);
 
                 context.startActivity(intent);
                 Log.wtf("adapter","name=" + name);
