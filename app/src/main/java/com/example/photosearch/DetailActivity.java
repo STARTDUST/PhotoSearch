@@ -42,12 +42,15 @@ import java.util.Collections;
 import java.util.List;
 
 public class DetailActivity extends AppCompatActivity implements Dialog.DialogListener {
-
+    //app bar layout
     AppBarLayout app_bar_detail;
     Toolbar toolbar_detail;
-    boolean app_bar_show = false;
 
-//    ImageView iv_det;
+    //removable image
+    String del_image;
+    Integer del_id;
+    String del_name;
+
     Integer id;
     String mImage;
     String mName;
@@ -75,13 +78,6 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
 //        }
 
         final View decorView = getWindow().getDecorView();
-//        decorView.setSystemUiVisibility(
-//                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-//                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-//                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-//                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-//                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
 
         sqLiteHelper = new SQLiteHelper(this, "FoodDB.sqlite", null, 1);
         sqLiteHelper.queryData("CREATE TABLE IF  NOT EXISTS FOOD (Id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, image VARCHAR)");
@@ -109,39 +105,13 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
         mImage = intent.getStringExtra("iImage");
         id = intent.getIntExtra("Id", 0);
         position = intent.getIntExtra("position", 0);
+        del_image = mImage;
+        del_id = id;
+        del_name = mName;
 
         Log.wtf("det","name=" + mName);
 
         toolbar_detail.setTitle(mName);
-//        loadImageFromStorage(mImage, mName);
-
-//        iv_det.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (app_bar_show){
-//                    app_bar_detail.setVisibility(View.GONE);
-//
-//                    decorView.setSystemUiVisibility(
-//                            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-//                                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-//                                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-//                                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-//                                    | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-//                                    | View.SYSTEM_UI_FLAG_IMMERSIVE);
-//
-//                    app_bar_show = false;
-//                }
-//                else {
-//                    app_bar_detail.setVisibility(View.VISIBLE);
-//
-//                    decorView.setSystemUiVisibility(
-////                            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-//                              View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-//
-//                    app_bar_show = true;
-//                }
-//            }
-//        });
 
         Cursor cursor = sqLiteHelper.getData("SELECT * FROM FOOD");
         list.clear();
@@ -168,6 +138,9 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
             @Override
             public void onPageSelected(int position) {
                 toolbar_detail.setTitle(list.get(position).getTitle());
+                del_image = list.get(position).getImg();
+                del_id = list.get(position).getId();
+                del_name = list.get(position).getTitle();
             }
 
             @Override
@@ -176,20 +149,6 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
             }
         });
     }
-
-//    private void loadImageFromStorage(String path, String name) {
-//
-//        try {
-//            File f=new File(path);
-//            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
-//            iv_det.setImageBitmap(getResizedBitmap(b));
-//        }
-//        catch (FileNotFoundException e)
-//        {
-//            e.printStackTrace();
-//        }
-//
-//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -211,8 +170,8 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
                             public void onClick(DialogInterface dialog, int which) {
                                 Log.wtf("dialog", "yes_pressed");
 
-                                sqLiteHelper.deleteData(id.toString());
-                                File file = new File(mImage);
+                                sqLiteHelper.deleteData(del_id.toString());
+                                File file = new File(del_image);
                                 if(file.exists()){
                                     boolean deleted = file.delete();
                                     if (deleted){
@@ -248,8 +207,7 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
     }
 
     public void openDialog(){
-        Log.wtf("image1", mImage.toString());
-        Dialog dialog = new Dialog(id, mImage.toString(), mName, DetailActivity.this);
+        Dialog dialog = new Dialog(del_id, del_image.toString(), del_name, DetailActivity.this);
         dialog.show(getSupportFragmentManager(), "dialog");
     }
 
@@ -257,23 +215,6 @@ public class DetailActivity extends AppCompatActivity implements Dialog.DialogLi
     public void applyText(String name) {
         toolbar_detail.setTitle(name);
     }
-
-    private Bitmap getResizedBitmap(Bitmap image) {
-        int maxSize = 1920;
-        int width = image.getWidth();
-        int height = image.getHeight();
-
-        float bitmapRatio = (float)width / (float) height;
-        if (bitmapRatio > 0) {
-            width = maxSize;
-            height = (int) (width / bitmapRatio);
-        } else {
-            height = maxSize;
-            width = (int) (height * bitmapRatio);
-        }
-        return Bitmap.createScaledBitmap(image, width, height, true);
-    }
-
 
     public int getStatusBarHeight() {
         int result = 0;

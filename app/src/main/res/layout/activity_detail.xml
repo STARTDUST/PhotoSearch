@@ -18,15 +18,6 @@
         android:translationZ="0dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-<!--    <com.github.chrisbanes.photoview.PhotoView-->
-<!--        android:id="@+id/iv_det"-->
-<!--        android:layout_width="0dp"-->
-<!--        android:layout_height="0dp"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />-->
-
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar_detail"
         android:layout_width="match_parent"
